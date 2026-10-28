@@ -106,3 +106,23 @@ python -m py_compile terrain_interface.py procedural_generators.py \
 The framework has also been smoke-tested for procedural elevation/slope/
 roughness generation, neural inference, and MuJoCo environment reset/step
 behavior.
+
+## Live research dashboard
+
+The repository includes a browser dashboard under `src/` for inspecting terrain
+generators and PPO experiments. It is a Vite + React + TypeScript frontend with
+a dark scientific-console UI, responsive terrain gallery, SVG simulation
+viewport, live metric charts, generator controls, and a typed REST/WebSocket
+client contract for a FastAPI backend.
+
+Install Node dependencies and run the dashboard locally:
+
+```bash
+npm install
+npm run dev
+```
+
+The dashboard starts in a clearly labelled **DEMO DATA** mode, so it remains
+useful without a backend. When the FastAPI service is available, set the API
+base URL in the client integration and use `createApiClient()` to connect the
+health, terrain generation, reset, and `/ws/stream` endpoints.
