@@ -1,0 +1,12 @@
+# Core terrain generation and visualization
+numpy>=1.24
+matplotlib>=3.7
+
+# MuJoCo/Gymnasium simulation
+gymnasium>=0.29
+mujoco>=3.1
+
+# Optional neural terrain generators and PPO baseline
+torch>=2.0
+stable-baselines3>=2.2
+wandb>=0.16
