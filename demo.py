@@ -2,11 +2,28 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from neural_generators import DiffusionTerrainGenerator, GANTerrainGenerator
 from procedural_generators import EvolutionaryTerrainGenerator, PerlinTerrainGenerator
+
+
+def _show_or_save(figure: matplotlib.figure.Figure) -> None:
+    """Display a figure with a GUI backend, or save it in headless mode."""
+    backend = matplotlib.get_backend().lower()
+    non_interactive = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
+    if backend not in non_interactive:
+        plt.show(block=False)
+        return
+    output = Path(os.environ.get("TERRAIN_DEMO_OUTPUT", "terrain_demo.png"))
+    figure.savefig(output, dpi=150, bbox_inches="tight")
+    print(f"Saved terrain figure to {output}")
+    plt.close(figure)
 
 
 def main() -> None:
@@ -18,7 +35,7 @@ def main() -> None:
         axis.plot_surface(y, x, generator.elevation(), cmap="terrain", linewidth=0)
         axis.set_title(type(generator).__name__)
     figure.tight_layout()
-    plt.show(block=False)
+    _show_or_save(figure)
     try:
         from sim_env import TerrainSkidSteerEnv
         environment = TerrainSkidSteerEnv(generators[0], render_mode="rgb_array")
