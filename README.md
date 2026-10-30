@@ -122,7 +122,27 @@ npm install
 npm run dev
 ```
 
-The dashboard starts in a clearly labelled **DEMO DATA** mode, so it remains
-useful without a backend. When the FastAPI service is available, set the API
-base URL in the client integration and use `createApiClient()` to connect the
-health, terrain generation, reset, and `/ws/stream` endpoints.
+Start the live FastAPI service in a second terminal:
+
+```bash
+python -m pip install -r requirements.txt
+python -m uvicorn backend:app --reload --port 8000
+```
+
+The dashboard connects to `http://127.0.0.1:8000` by default. Set
+`VITE_API_URL` before `npm run dev` when the API is hosted elsewhere. The live
+service exposes:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Health and service identity |
+| `GET /api/dashboard` | Current terrain gallery, PPO metrics, and events |
+| `POST /api/terrain/generate` | Generate terrain from frequency/octave/persistence/amplitude/seed |
+| `POST /api/simulation/reset` | Reset the demo simulation and choose a new seed |
+| `GET /api/simulation/frame` | Current episode, velocity, height, and run state |
+| `GET /api/training/status` | Current PPO status and metrics |
+| `POST /api/training/control` | Start or pause the training loop |
+| `WS /ws/stream` | Two-second telemetry heartbeats with event, metric, and simulation snapshots |
+
+If the API cannot be reached, the frontend clearly labels **DEMO FALLBACK** and
+continues to provide interactive generated surfaces and controls.

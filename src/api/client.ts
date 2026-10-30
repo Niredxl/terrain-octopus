@@ -38,6 +38,13 @@ export interface DashboardState {
   events: StreamEvent[];
 }
 
+export interface StreamSnapshot {
+  type: "snapshot";
+  event: StreamEvent;
+  training: { running: boolean; step: number; metrics: MetricsSnapshot };
+  simulation: { episode: number; step: number; velocity: number; height: number; running: boolean };
+}
+
 const terrainPalette = ["#62e6ff", "#b8f36a", "#f7b267", "#b39cff"];
 
 function seededValue(seed: number, x: number, y: number): number {
@@ -108,15 +115,24 @@ export function createApiClient(baseUrl = "") {
 
   return {
     health: () => request<{ status: string }>("/health"),
+    dashboard: () => request<DashboardState>("/api/dashboard"),
     generateTerrain: (parameters: GeneratorParameters) =>
-      request<TerrainSample>("/api/terrain/generate", {
+      request<DashboardState>("/api/terrain/generate", {
         method: "POST",
         body: JSON.stringify(parameters),
       }),
-    resetSimulation: () => request<{ status: string }>("/api/simulation/reset", { method: "POST" }),
+    resetSimulation: () => request<{ status: string; seed: number }>("/api/simulation/reset", { method: "POST" }),
+    setTraining: (running: boolean) =>
+      request<{ running: boolean; step: number; metrics: MetricsSnapshot[] }>("/api/training/control", {
+        method: "POST",
+        body: JSON.stringify({ running }),
+      }),
     createStream: (onEvent: (event: StreamEvent) => void) => {
       const socket = new WebSocket(`${baseUrl.replace(/^http/, "ws")}/ws/stream`);
-      socket.onmessage = (message) => onEvent(JSON.parse(message.data) as StreamEvent);
+      socket.onmessage = (message) => {
+        const snapshot = JSON.parse(message.data) as StreamSnapshot;
+        onEvent(snapshot.event);
+      };
       return socket;
     },
   };

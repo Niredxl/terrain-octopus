@@ -19,7 +19,7 @@ function App() {
   const [showParameters, setShowParameters] = useState(true);
   const { parameters, setParameters, state } = dashboard;
   const runLabel = dashboard.running ? "Pause training" : "Start training";
-  const connectionText = state.connection === "demo" ? "DEMO DATA" : state.connection.toUpperCase();
+  const connectionText = dashboard.loading ? "CONNECTING" : state.connection === "demo" ? "DEMO FALLBACK" : state.connection.toUpperCase();
   const latestMetric = state.metrics[state.metrics.length - 1];
   const updateParameter = (key: keyof typeof parameters, value: number) => {
     const next = { ...parameters, [key]: value };
@@ -53,7 +53,7 @@ function App() {
               <div className="architecture-list">{architecture.map(([number, file, description]) => <div className="architecture-row" key={file}><span className="arch-number">{number}</span><div><b>{file}</b><span>{description}</span></div><span className="arch-link">↗</span></div>)}</div>
             </Panel>
             <Panel title="Run control" eyebrow="02 / EXECUTION" className="control-panel">
-              <div className="control-status"><span className={`status-dot ${dashboard.running ? "live" : ""}`} /><div><b>{dashboard.running ? "Training in progress" : "Ready for rollout"}</b><span>Local demo stream · seed {parameters.seed}</span></div></div>
+              <div className="control-status"><span className={`status-dot ${dashboard.running ? "live" : ""}`} /><div><b>{dashboard.running ? "Training in progress" : "Ready for rollout"}</b><span>{state.connection === "connected" ? "FastAPI backend ·" : "Demo fallback ·"} seed {parameters.seed}</span></div></div>
               <div className="control-buttons"><button className="button button-primary" onClick={dashboard.toggleTraining}>{dashboard.running ? "Ⅱ" : "▶"} {runLabel}</button><button className="button button-secondary" onClick={dashboard.reset}>↺ Reset</button></div>
               <button className="parameter-toggle" onClick={() => setShowParameters((current) => !current)}><span>Generator parameters</span><span>{showParameters ? "−" : "+"}</span></button>
               {showParameters && <div className="sliders">
@@ -76,14 +76,14 @@ function App() {
             </Panel>
             <Panel title="Live event stream" eyebrow="05 / TELEMETRY">
               <div className="event-stream">{state.events.map((event, index) => <div className="event-row" key={`${event.timestamp}-${index}`}><span className={`event-marker ${event.level}`} /><time>{event.timestamp}</time><span>{event.message}</span></div>)}</div>
-              <div className="stream-footer"><span className="status-dot live" /> streaming from mock websocket <span>⌘ K</span></div>
+              <div className="stream-footer"><span className={`status-dot ${state.connection === "connected" ? "live" : ""}`} /> {state.connection === "connected" ? "streaming from FastAPI websocket" : "backend unavailable · demo stream"} <span>⌘ K</span></div>
             </Panel>
           </div>
 
           <Panel title="PPO training metrics" eyebrow="06 / OPTIMIZATION" action={<div className="metric-summary"><span>steps <b>120k</b></span><span>success <b className="text-lime">{Math.round(latestMetric.successRate * 100)}%</b></span><span>policy <b>v0.4.2</b></span></div>}>
             <MetricsGrid metrics={state.metrics} />
           </Panel>
-          <footer className="page-footer"><span>Terrain Octopus / scientific robotics lab</span><span>Mock mode is active until a FastAPI backend is available.</span></footer>
+          <footer className="page-footer"><span>Terrain Octopus / scientific robotics lab</span><span>{dashboard.error ?? "Live API connected · REST + WebSocket telemetry active."}</span></footer>
         </div>
       </section>
     </main>
